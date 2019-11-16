@@ -1,8 +1,10 @@
-const router = require('express').Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const router = require("express").Router();
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-const validateUser = require('./validate-user');
+const Users = require("../users/users-model");
+const secrets = require('../config/secrets');
+const validateUser = require("./validate-user");
 
 router.post("/register", (req, res) => {
   let user = req.body;
@@ -15,13 +17,17 @@ router.post("/register", (req, res) => {
       .then(saved => {
         res.status(201).json(saved);
       })
-      .catch(err => res.status(500).json({ message: 'Failed to add user to database' }));
+      .catch(err =>
+        res.status(500).json({ message: "Failed to add user to database" })
+      );
   } else {
-    res.status(400).json({ message: 'Invalid credentials', errors: validation.errors });
+    res
+      .status(400)
+      .json({ message: "Invalid credentials", errors: validation.errors });
   }
 });
 
-router.post('/login', (req, res) => {
+router.post("/login", (req, res) => {
   let { username, password } = req.body;
   const validation = validateUser(req.body, req.path);
 
@@ -31,18 +37,19 @@ router.post('/login', (req, res) => {
       .then(user => {
         if (user && bcrypt.compareSync(password, user.password)) {
           const token = generateToken(user);
-          console.log(token)
-          res.status(200).json({ message: `Welcome ${user.username}!`, token
-          });
+          console.log(token);
+          res.status(200).json({ message: `Welcome ${user.username}!`, token });
         } else {
-          res.status(401).json({ message: 'Invalid Credentials' });
+          res.status(401).json({ message: "Invalid Credentials" });
         }
       })
       .catch(err => res.status(500).json(err));
-    } else {
-      res.status(400).json({ message: 'Invalid credentials', errors: validation.errors });
-    }
-  });
+  } else {
+    res
+      .status(400)
+      .json({ message: "Invalid credentials", errors: validation.errors });
+  }
+});
 
 function generateToken(user) {
   const payload = {
@@ -50,7 +57,7 @@ function generateToken(user) {
     username: user.username
   };
   const options = {
-    expiresIn: '8h'
+    expiresIn: "8h"
   };
 
   return jwt.sign(payload, secrets.jwtSecret, options);
